@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -32,6 +34,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImage
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import kotlin.concurrent.thread
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -149,6 +154,14 @@ fun SimpleRow( modifier: Modifier = Modifier) {
 //            .padding(16.dp),
 
         )
+
+        Button(onClick = {
+            // 点击操作
+            Log.e("getSync","diandian");
+            getSync()
+        }) {
+            Text(text = "点我")
+        }
     }
 }
 
@@ -160,5 +173,27 @@ fun SimpleRow( modifier: Modifier = Modifier) {
 fun GreetingPreview() {
     MyApplicationTheme {
         SimpleWidgetColumn()
+    }
+}
+
+
+
+//get同步请求
+fun getSync() {
+    thread {
+        try {
+            val client = OkHttpClient()
+            val request = Request.Builder()
+                .url("http://10.0.2.2:5000/")//因为Android模拟器本身把自己当做了localhost或127.0.0.1，而此时我们又通过localhost或127.0.0.1访问本地服务器，所以会抛出异常了。在模拟器上可以用10.0.2.2代替127.0.0.1和localhost；
+                .build()
+            val call=client.newCall(request)
+            val response = call.execute()//execute方法会阻塞在这里，必须等到服务器响应，得到response才会执行下面的代码
+            val requestData = response.body?.string()
+            if (requestData != null) {
+                Log.e("getSync", requestData)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
